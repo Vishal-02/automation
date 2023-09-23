@@ -1,5 +1,5 @@
 from os import path
 
-path = "notification.py"
+name = "File_1.py"
 
-print(path.isfile(path))
+print(len(name.split("/")))

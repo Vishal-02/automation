@@ -10,22 +10,27 @@ TODO:
     i think i should focus on this after i'm done making the whole program
 '''
 
-def split_pdf(args: ArgumentParser.parse_args):
-
-    '''
-    function that splits the pdf and returns the writer object with the new pdf.
-    output -> PdfWriter() object containing the pages of the new, split pdf
-    '''
-
+def check_valid_file(org_dir):
     while True:
-        if not path.isfile(args.path):
-            path = input("Enter a valid file path: ")
+        if not path.isfile(org_dir):
+            path = input(f"{org_dir} is not a valid file. Enter a valid file path: ")
         else:
             break
 
-    path = path.join("C:/Users/visha/Downloads", args.path)
+    location = ""
+    if len(args.path.split("/")) == 1:
+        return path.join("C:/Users/visha/Downloads", org_dir)
+    else:
+        return org_dir
+
+def split_pdf(args: ArgumentParser.parse_args):
+    '''
+    function that splits the pdf and writes the new pdf at cwd.
+    '''
+
+    location = check_valid_file(args.path)
     start, end = pages[0], pages[1]
-    reader = PdfReader(path)
+    reader = PdfReader(location)
 
     # need to make sure that the start and end values aren't negative fucking integers
     while True:
@@ -51,30 +56,45 @@ def split_pdf(args: ArgumentParser.parse_args):
         writer.add_page(reader.pages[i])
     
     writer.write(output)
+    writer.close()
 
 def merge_pdf(args: ArgumentParser.parse_args):
-    print("works")
-    pass
+    '''
+    function that merges pdf files and writes the output pdf at cwd.
+    '''
+
+    merger = PdfWriter()
+    first = check_valid_file(args.first)
+    other = []
+
+    for pdfs in args.other:
+        other.append(check_valid_file(pdfs))
+
+    other.insert(first, 0)
+
+    for pdf in other:
+        merger.append(pdf)
+    
+    if args.name.split(".")[-1] != "pdf":
+        args.name += ".pdf"
+
+    merger.write(args.name)
+    merger.close()
 
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
 subparsers = parser.add_subparsers()
-
-def test_split(args):
-    print("entered function")
-    print(args.pages[0], args.pages[1])
-    print(args.name)
 
 #subparser for split
 split_parser = subparsers.add_parser("split", help="split parser")
 split_parser.add_argument("--path", type=str)
 split_parser.add_argument("--pages", type=int, nargs=2)
 split_parser.add_argument("--name", type=str, default = "split")
-split_parser.set_defaults(func=test_split)
+split_parser.set_defaults(func=split_pdf)
 
 # subparser for merge
 merge_parser = subparsers.add_parser("merge", help="merge parser")
 merge_parser.add_argument("--first", type=str, required=True)
-merge_parser.add_argument("--second", type=str, required=True)
+merge_parser.add_argument("--other", type=str, required=True, nargs="+")
 merge_parser.add_argument("--name", type=str, default="merged")
 merge_parser.set_defaults(func=merge_pdf)
 
