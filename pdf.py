@@ -1,12 +1,10 @@
-from PyPDF2 import PdfReader, PdfWriter
 from os import path
 from argparse import ArgumentParser
+from PyPDF2 import PdfReader, PdfWriter
 
 '''
 things i need to do before i can complete this program:
-- how to split a pdf using the PdfWriter:
-    check out the append_pages_from_reader function
-    yeah no the above doesn't work you probably gotta use the add_page function, that works way better
+- subparsers, i need that shit in my life right now
 
 - how to make this program a command line argument that i can access any time just by opening my cmd:
     i think i should focus on this after i'm done making the whole program
@@ -15,56 +13,67 @@ things i need to do before i can complete this program:
     from what i've gathered, asserts are only for unit tests. they aren't meant to be there in your main program
 '''
 
-parser = ArgumentParser(
-    description="Parser for parsing commands to manipulate PDF files"
-)
+def split_pdf(args: ArgumentParser.parse_args):
 
-# current planned functions -> split a pdf
-parser.add_argument(
-    "--func",
-    nargs="?",
-    type=str,
-    default="",
-    help="Mention the function you would like to perform"
-)
+    '''
+    function that splits the pdf and returns the writer object with the new pdf.
+    output -> PdfWriter() object containing the pages of the new, split pdf
+    '''
 
-# i'm going to assume that if only a file name is provided, it's in the downloads folder
-parser.add_argument(
-    "-filename",
-    type=str,
-    default="",
-    help="Path of the first PDF file"
-)
+    path = path.join("C:/Users/visha/Downloads", args.filename)
+    start, end = pages[0], pages[1]
+    reader = PdfReader(path)
 
-# this is for the number of pages for splitting
-parser.add_argument(
-    "--p",
-    type=int,
-    nargs=2,
-    help="Enter the range of pages you would like to split"
-)
+    # need to make sure that the start and end values aren't negative fucking integers
+    while True:
+        if start <= 0:
+            start = int(input("First page cannot be a negative integer or zero. Enter the page to begin the split from: "))
+        elif start > len(reader.pages):
+            start = int(input("First page cannot be greater than length of document, enter the first page number again: "))
+        elif end < 0:
+            end = int(input("Invalid value for last page of split. Enter the page to end split operation: "))
+        else:
+            break
+    
+    # if you have a 10 page doc and choose to split at 100, f*ck you
+    if end > len(reader.pages):
+        end = len(reader.pages)
 
-parser.add_argument(
-    "--name",
-    nargs="?",
-    type=str,
-    default="output",
-    help="Enter the name you want for the output file"
-)
+    output = args.name
+    if output.split(".")[-1] != "pdf":
+        output += ".pdf"
+
+    writer = PdfWriter()
+    for i in range(start - 1, end):
+        writer.add_page(reader.pages[i])
+    
+    writer.write(output)
+
+def merge_pdf(args: ArgumentParser.parse_args):
+    print("works")
+    pass
+
+parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
+subparsers = parser.add_subparsers()
+
+def test_split(args):
+    print("entered function")
+    print(args.pages[0], args.pages[1])
+    print(args.name)
+
+#subparser for split
+split_parser = subparsers.add_parser("split", help="split parser")
+split_parser.add_argument("--path", type=str)
+split_parser.add_argument("--pages", type=int, nargs=2)
+split_parser.add_argument("--name", type=str, default = "split")
+split_parser.set_defaults(func=test_split)
+
+# subparser for merge
+merge_parser = subparsers.add_parser("merge", help="merge parser")
+merge_parser.add_argument("--first", type=str, required=True)
+merge_parser.add_argument("--second", type=str, required=True)
+merge_parser.add_argument("--name", type=str, default="merged")
+merge_parser.set_defaults(func=merge_pdf)
 
 args = parser.parse_args()
-func = args.func
-path = path.join("C:/Users/visha/Downloads", args.filename)
-start, end = args.p[0], args.p[1]
-output = args.name
-
-if output.split(".")[-1] != "pdf":
-    output += ".pdf"
-
-reader = PdfReader(path)
-writer = PdfWriter()
-
-if end <= len(reader.pages):
-    for i in range(end):
-        writer.add_page(reader.pages[i])
-writer.write(output)
+args.func(args)
