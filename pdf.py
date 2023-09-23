@@ -3,14 +3,11 @@ from argparse import ArgumentParser
 from PyPDF2 import PdfReader, PdfWriter
 
 '''
-things i need to do before i can complete this program:
-- subparsers, i need that shit in my life right now
+TODO:
+- finish the merge_pdf function
 
 - how to make this program a command line argument that i can access any time just by opening my cmd:
     i think i should focus on this after i'm done making the whole program
-
-- the "assert" command in python:
-    from what i've gathered, asserts are only for unit tests. they aren't meant to be there in your main program
 '''
 
 def split_pdf(args: ArgumentParser.parse_args):
@@ -20,7 +17,13 @@ def split_pdf(args: ArgumentParser.parse_args):
     output -> PdfWriter() object containing the pages of the new, split pdf
     '''
 
-    path = path.join("C:/Users/visha/Downloads", args.filename)
+    while True:
+        if not path.isfile(args.path):
+            path = input("Enter a valid file path: ")
+        else:
+            break
+
+    path = path.join("C:/Users/visha/Downloads", args.path)
     start, end = pages[0], pages[1]
     reader = PdfReader(path)
 
