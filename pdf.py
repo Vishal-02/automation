@@ -10,18 +10,22 @@ TODO:
     i think i should focus on this after i'm done making the whole program
 '''
 
+# adds the '.pdf' at the end of the file if the user doesn't mention it themselves
+add_extension = lambda x: x if x.split(".")[-1] == "pdf" else x + ".pdf"
+
 def check_valid_file(org_dir):
+    org_dir = add_extension(org_dir)
+
+    if len(org_dir.split("/")) == 1:
+        org_dir = path.join("C:/Users/visha/Downloads", org_dir).replace("/", "\\") 
+    
     while True:
         if not path.isfile(org_dir):
-            path = input(f"{org_dir} is not a valid file. Enter a valid file path: ")
+            org_dir = input(f"{org_dir} is not a valid file. Enter a valid file path: ")
         else:
             break
 
-    location = ""
-    if len(args.path.split("/")) == 1:
-        return path.join("C:/Users/visha/Downloads", org_dir)
-    else:
-        return org_dir
+    return org_dir
 
 def split_pdf(args: ArgumentParser.parse_args):
     '''
@@ -29,7 +33,7 @@ def split_pdf(args: ArgumentParser.parse_args):
     '''
 
     location = check_valid_file(args.path)
-    start, end = pages[0], pages[1]
+    start, end = args.pages[0], args.pages[1]
     reader = PdfReader(location)
 
     # need to make sure that the start and end values aren't negative fucking integers
@@ -47,15 +51,12 @@ def split_pdf(args: ArgumentParser.parse_args):
     if end > len(reader.pages):
         end = len(reader.pages)
 
-    output = args.name
-    if output.split(".")[-1] != "pdf":
-        output += ".pdf"
 
     writer = PdfWriter()
     for i in range(start - 1, end):
         writer.add_page(reader.pages[i])
     
-    writer.write(output)
+    writer.write(add_extension(args.name))
     writer.close()
 
 def merge_pdf(args: ArgumentParser.parse_args):
@@ -70,15 +71,12 @@ def merge_pdf(args: ArgumentParser.parse_args):
     for pdfs in args.other:
         other.append(check_valid_file(pdfs))
 
-    other.insert(first, 0)
+    other.insert(0, first)
 
     for pdf in other:
         merger.append(pdf)
-    
-    if args.name.split(".")[-1] != "pdf":
-        args.name += ".pdf"
 
-    merger.write(args.name)
+    merger.write(add_extension(args.name))
     merger.close()
 
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
