@@ -97,6 +97,27 @@ def encrypt(args: ArgumentParser.parse_args):
     writer.write(add_extension(args.name))
     writer.close()
 
+def decrypt(args: ArgumentParser.parse_args):
+    reader = PdfReader(check_valid_file(args.path))
+    writer = PdfWriter()
+
+
+    while reader.is_encrypted:
+        reader.decrpyt(args.pwd)
+
+        if reader.is_encrypted:
+            args.pwd = input("The password entered was incorrect, re-enter the password for decryption: ")
+
+    for page in reader.pages:
+        writer.add_page(page)
+
+    # you could do this too, this is what's written in the documentation
+    # with open("decrypted-pdf.pdf", "wb") as f:
+    #     writer.write(f)
+
+    writer.write(add_extension(args.name))
+    writer.close()
+
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
 subparsers = parser.add_subparsers()
 
@@ -119,8 +140,15 @@ enc_parser = subparsers.add_parser("encrypt", help="encrypt parser")
 enc_parser.add_argument("--path", type=str, required=True)
 enc_parser.add_argument("--pwd", type=str, required=True)
 enc_parser.add_argument("--type", type=str, nargs="?", default="")
-merge_parser.add_argument("--name", type=str, default="encrypted")
+merge_parser.add_argument("--name", type=str, default="encrypted_file")
 enc_parser.set_defaults(func=encrypt)
+
+# subparser for decryption
+dec_parser = subparsers.add_parser("decrpyt", help="decrypt parser")
+dec_parser.add_argument("--path", type=str, required=True)
+dec_parser.add_argument("--pwd", type=str, required=True)
+dec_parser.add_argument("--name", type=str, default="decrypted_file")
+dec_parser.set_defaults(func=decrypt)
 
 args = parser.parse_args()
 args.func(args)
