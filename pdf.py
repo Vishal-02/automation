@@ -4,10 +4,11 @@ from PyPDF2 import PdfReader, PdfWriter
 
 '''
 TODO:
-- finish the merge_pdf function
+- how to make it so that i can access this script from anywhere on my laptop
 
-- how to make this program a command line argument that i can access any time just by opening my cmd:
-    i think i should focus on this after i'm done making the whole program
+- encrypt and decrypt functions?:
+    - encrypt
+    - decrypt
 '''
 
 # adds the '.pdf' at the end of the file if the user doesn't mention it themselves
@@ -32,9 +33,8 @@ def split_pdf(args: ArgumentParser.parse_args):
     function that splits the pdf and writes the new pdf at cwd.
     '''
 
-    location = check_valid_file(args.path)
     start, end = args.pages[0], args.pages[1]
-    reader = PdfReader(location)
+    reader = PdfReader(check_valid_file(args.path))
 
     # need to make sure that the start and end values aren't negative fucking integers
     while True:
@@ -79,6 +79,24 @@ def merge_pdf(args: ArgumentParser.parse_args):
     merger.write(add_extension(args.name))
     merger.close()
 
+def encrypt(args: ArgumentParser.parse_args):
+    reader = PdfReader(check_valid_file(args.path))
+    writer = PdfWriter()
+
+    for page in len(reader.pages):
+        writer.add_page(page)
+
+    if args.type != "":
+        writer.encrypt(args.pwd, args.type)
+    else: writer.encrypt(args.pwd)
+
+    # this is what's written in the documentation, but the one below should work as well
+    # with open(add_extension(args.name), "wb") as f:
+    #     writer.write(f)
+
+    writer.write(add_extension(args.name))
+    writer.close()
+
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
 subparsers = parser.add_subparsers()
 
@@ -95,6 +113,14 @@ merge_parser.add_argument("--first", type=str, required=True)
 merge_parser.add_argument("--other", type=str, required=True, nargs="+")
 merge_parser.add_argument("--name", type=str, default="merged")
 merge_parser.set_defaults(func=merge_pdf)
+
+# subparser for encryption
+enc_parser = subparsers.add_parser("encrypt", help="encrypt parser")
+enc_parser.add_argument("--path", type=str, required=True)
+enc_parser.add_argument("--pwd", type=str, required=True)
+enc_parser.add_argument("--type", type=str, nargs="?", default="")
+merge_parser.add_argument("--name", type=str, default="encrypted")
+enc_parser.set_defaults(func=encrypt)
 
 args = parser.parse_args()
 args.func(args)

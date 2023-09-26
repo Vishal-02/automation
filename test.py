@@ -1,5 +1,10 @@
 from os import path
+from argparse import ArgumentParser
 
-name = "File_1.py"
+parser = ArgumentParser()
+sub = parser.add_subparsers()
+split = sub.add_parser("split")
 
-print(len(name.split("/")))
+print(type(parser))
+print(type(sub))
+print(type(split))
