@@ -1,10 +1,5 @@
-from os import path
-from argparse import ArgumentParser
+import tkinter as tk
+import pdf
 
-parser = ArgumentParser()
-sub = parser.add_subparsers()
-split = sub.add_parser("split")
+window = tk.Tk()
 
-print(type(parser))
-print(type(sub))
-print(type(split))
