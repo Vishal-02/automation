@@ -97,6 +97,27 @@ def encrypt(args: ArgumentParser.parse_args):
     writer.write(add_extension(args.name))
     writer.close()
 
+def decrypt(args: ArgumentParser.parse_args):
+    reader = PdfReader(check_valid_file(args.path))
+    writer = PdfWriter()
+
+
+    while reader.is_encrypted:
+        reader.decrpyt(args.pwd)
+
+        if reader.is_encrypted:
+            args.pwd = input("The password entered was incorrect, re-enter the password for decryption: ")
+
+    for page in reader.pages:
+        writer.add_page(page)
+
+    # you could do this too, this is what's written in the documentation
+    # with open("decrypted-pdf.pdf", "wb") as f:
+    #     writer.write(f)
+
+    writer.write(add_extension(args.name))
+    writer.close()
+
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
 subparsers = parser.add_subparsers()
 
