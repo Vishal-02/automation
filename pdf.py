@@ -143,6 +143,7 @@ enc_parser.add_argument("--type", type=str, nargs="?", default="")
 merge_parser.add_argument("--name", type=str, default="encrypted_file")
 enc_parser.set_defaults(func=encrypt)
 
+
 # subparser for decryption
 dec_parser = subparsers.add_parser("decrpyt", help="decrypt parser")
 dec_parser.add_argument("--path", type=str, required=True)
