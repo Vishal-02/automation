@@ -97,9 +97,6 @@ def encrypt(args: ArgumentParser.parse_args):
     writer.write(add_extension(args.name))
     writer.close()
 
-def decrypt(args: ArgumentParser.parse_args):
-    pass
-
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
 subparsers = parser.add_subparsers()
 
@@ -122,8 +119,15 @@ enc_parser = subparsers.add_parser("encrypt", help="encrypt parser")
 enc_parser.add_argument("--path", type=str, required=True)
 enc_parser.add_argument("--pwd", type=str, required=True)
 enc_parser.add_argument("--type", type=str, nargs="?", default="")
-merge_parser.add_argument("--name", type=str, default="encrypted")
+merge_parser.add_argument("--name", type=str, default="encrypted_file")
 enc_parser.set_defaults(func=encrypt)
+
+# subparser for decryption
+dec_parser = subparsers.add_parser("decrpyt", help="decrypt parser")
+dec_parser.add_argument("--path", type=str, required=True)
+dec_parser.add_argument("--pwd", type=str, required=True)
+dec_parser.add_argument("--name", type=str, default="decrypted_file")
+dec_parser.set_defaults(func=decrypt)
 
 args = parser.parse_args()
 args.func(args)
