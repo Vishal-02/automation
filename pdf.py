@@ -97,6 +97,9 @@ def encrypt(args: ArgumentParser.parse_args):
     writer.write(add_extension(args.name))
     writer.close()
 
+def decrypt(args: ArgumentParser.parse_args):
+    pass
+
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
 subparsers = parser.add_subparsers()
 
