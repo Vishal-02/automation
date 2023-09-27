@@ -122,7 +122,8 @@ parser = ArgumentParser(description="Parser for parsing commands to manipulate P
 subparsers = parser.add_subparsers()
 
 #subparser for split
-split_parser = subparsers.add_parser("split", help="split parser")
+split_parser = subparsers.add_parser("split", 
+                    help="split --path --pages --name")
 split_parser.add_argument("--path", type=str)
 split_parser.add_argument("--pages", type=int, nargs=2)
 split_parser.add_argument("--name", type=str, default = "split")
@@ -140,7 +141,7 @@ enc_parser = subparsers.add_parser("encrypt", help="encrypt parser")
 enc_parser.add_argument("--path", type=str, required=True)
 enc_parser.add_argument("--pwd", type=str, required=True)
 enc_parser.add_argument("--type", type=str, nargs="?", default="")
-merge_parser.add_argument("--name", type=str, default="encrypted_file")
+enc_parser.add_argument("--name", type=str, default="encrypted_file")
 enc_parser.set_defaults(func=encrypt)
 
 
