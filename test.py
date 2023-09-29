@@ -8,10 +8,11 @@ class base_app(tk.Tk):
 
         # create a container
         container = tk.Frame(self)
+        
         container.pack(side="top", fill="both", expand=True)
 
-        container.grid_columnconfigure(0, weight=1)
-        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(3, weight=1)
+        container.grid_rowconfigure(3, weight=1)
 
         self.frames = {}
 
@@ -19,7 +20,7 @@ class base_app(tk.Tk):
             frame = _(container, self)
             self.frames[_] = frame
 
-            frame.grid(row=0, column=0, sticky="nsew")
+            frame.grid(row=0, column=0, sticky="nesw")
 
         self.show_frame(StartPage)
 
@@ -33,7 +34,7 @@ class StartPage(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         label = ttk.Label(self, text="Main Menu")
-        label.grid(row=0, column=4, padx=10, pady=10)
+        label.grid(row=0, column=1, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Page 1",
                              command=lambda:controller.show_frame(FirstPage))
@@ -48,7 +49,7 @@ class FirstPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="first page")
-        label.grid(row=0, column=4, padx=10, pady=10)
+        label.grid(row=0, column=2, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Start Page",
                              command=lambda:controller.show_frame(StartPage))
@@ -57,6 +58,14 @@ class FirstPage(tk.Frame):
         button2 = ttk.Button(self, text="Page 2",
                              command=lambda:controller.show_frame(SecondPage))
         button2.grid(row=2, column=1, padx=10, pady=10)
+
+        button3 = ttk.Button(self, text="Nothing",
+                             command=lambda:controller.show_frame(SecondPage))
+        button3.grid(row=2, column=2, padx=10, pady=10)
+
+        button4 = ttk.Button(self, text="Nothing 2",
+                             command=lambda:controller.show_frame(SecondPage))
+        button4.grid(row=2, column=3, padx=10, pady=10)
 
 class SecondPage(tk.Frame):
     def __init__(self, parent, controller):
