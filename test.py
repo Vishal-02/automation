@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog as f
+import pdf_functions as pdf
 
 class base_app(tk.Tk):
     def __init__(self, *args, **kwargs) -> None:
@@ -58,7 +59,8 @@ class StartPage(tk.Frame):
 class Split(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        self.file_name = ""
+        self.file_name = "" # name of the file to be split
+        self.first_page = self.last_page = tk.StringVar() # first and last page of the split
 
         label = ttk.Label(self, text="   Split PDF", font=("Times New Roman", 25))
         label.grid(row=0, column=2, padx=70, pady=70, columnspan=2, sticky="n")
@@ -67,20 +69,36 @@ class Split(tk.Frame):
                              command=self.upload_file)
         button1.grid(row=1, column=1, padx=30, pady=30, sticky="n")
 
-        self.fillerLabel = ttk.Label(self, width=100, text="", font=("Times New Roman", 10))
+        self.fillerLabel = ttk.Label(self, width=50, text="", font=("Times New Roman", 10))
         self.fillerLabel.grid(row=1, column=2, padx=30, pady=30)
 
-        button2 = ttk.Button(self, text="Page 2", width=20,
-                             command=lambda:controller.show_frame(Merge))
-        button2.grid(row=1, column=3, padx=30, pady=30)
 
         fillerLabel2 = ttk.Label(self, text="     ", width=20, font=("Times New Roman", 15))
-        fillerLabel2.grid(row=1, column=4, padx=30, pady=30)
+        fillerLabel2.grid(row=1, column=3, padx=30, pady=30)
+
+        range_label = ttk.Label(self, text="Enter the first and last page of the split: ",
+                                font=("Times New Roman", 15))
+        range_label.grid(row=2, column=1, padx=30, pady=30)
+
+        first_page_value = tk.Entry(self, textvariable=self.first_page, font=("Times New Roman", 15))
+        first_page_value(row=2, column=2, padx=30, pady=30)
+
+        last_page_value = tk.Entry(self, textvariable=self.last_page, font=("Times New Roman", 15))
+        last_page_value(row=2, column=3, padx=30, pady=30)
+
+        button2 = ttk.Button(self, text="Split", width=40,
+                             command=self.split)
+        button2.grid(row=2, column=4, padx=30, pady=30, sticky="n")
+
+    def split():
+        # if first page > no. of pages, empty pdf
+        # if first page < no. of pages < last page, last page = no. of pages
+        pass
 
     def upload_file(self):
         file_types = [('PDF Files', 'pdf')]
-        file_name = f.askopenfilename(filetypes=file_types, initialdir="C:/Users/USER/Downloads")
-        file_name = file_name.split('\\')[-1]
+        file_name = f.askopenfilename(filetypes=file_types, initialdir="shell:Downloads")
+        file_name = file_name.split('/')[-1]
         self.fillerLabel.configure(text=file_name)
         self.fillerLabel.update()
 
