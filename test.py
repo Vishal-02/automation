@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk
-import pdf_functions as p
 
 class base_app(tk.Tk):
     def __init__(self, *args, **kwargs) -> None:
@@ -19,7 +18,7 @@ class base_app(tk.Tk):
             frame = _(container, self)
             self.frames[_] = frame
 
-            frame.grid(row=0, column=0, sticky="nsew")
+            frame.grid(row=0, column=0, sticky="nesw", rowspan=5, columnspan=5)
 
         self.show_frame(StartPage)
 
@@ -33,7 +32,7 @@ class StartPage(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         label = ttk.Label(self, text="Main Menu")
-        label.grid(row=0, column=4, padx=10, pady=10)
+        label.grid(row=0, column=1, padx=10, pady=10, columnspan=2, sticky="n")
 
         button1 = ttk.Button(self, text="Page 1",
                              command=lambda:controller.show_frame(FirstPage))
@@ -41,14 +40,14 @@ class StartPage(tk.Frame):
 
         button2 = ttk.Button(self, text="Page 2",
                              command=lambda:controller.show_frame(SecondPage))
-        button2.grid(row=2, column=1, padx=10, pady=10)
+        button2.grid(row=1, column=2, padx=10, pady=10)
         
 
 class FirstPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="first page")
-        label.grid(row=0, column=4, padx=10, pady=10)
+        label.grid(row=0, column=1, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Start Page",
                              command=lambda:controller.show_frame(StartPage))
@@ -62,7 +61,7 @@ class SecondPage(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         label = ttk.Label(self, text="second page")
-        label.grid(row=0, column=4, padx=10, pady=10)
+        label.grid(row=0, column=1, padx=10, pady=10)
 
         button1 = ttk.Button(self, text="Start Page",
                              command=lambda:controller.show_frame(StartPage))
