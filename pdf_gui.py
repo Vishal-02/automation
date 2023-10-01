@@ -35,27 +35,27 @@ class StartPage(tk.Frame):
         tk.Frame.__init__(self, parent)
 
         label = ttk.Label(self, text="   Welcome to PDF Splitter", font=("Times New Roman", 25))
-        label.grid(row=0, column=2, padx=70, pady=70, columnspan=2, sticky="n")
+        label.grid(row=0, column=2, padx=70, pady=70, columnspan=2, sticky="e")
 
         # button for split
         button1 = ttk.Button(self, text="Split", width=20,
                              command=lambda:controller.show_frame(Split))
-        button1.grid(row=1, column=1, padx=30, pady=30, sticky="n")
+        button1.grid(row=1, column=1, padx=50, pady=30, sticky="n")
 
         # button for merge
         button2 = ttk.Button(self, text="Merge", width=20,
                              command=lambda:controller.show_frame(Merge))
-        button2.grid(row=1, column=2, padx=30, pady=30, sticky="n")
+        button2.grid(row=1, column=2, padx=50, pady=30, sticky="n")
 
         # button for encrypt
         button3 = ttk.Button(self, text="Encrypt", width=20,
                              command=lambda:controller.show_frame(Merge))
-        button3.grid(row=1, column=3, padx=30, pady=30, sticky="n")
+        button3.grid(row=1, column=3, padx=50, pady=30, sticky="n")
 
         # button for decrypt
         button4 = ttk.Button(self, text="Decrypt", width=20,
                              command=lambda:controller.show_frame(Merge))
-        button4.grid(row=1, column=4, padx=30, pady=30, sticky="n")
+        button4.grid(row=1, column=4, padx=50, pady=30, sticky="n")
 
 class Split(tk.Frame):
     def __init__(self, parent, controller):
@@ -64,32 +64,39 @@ class Split(tk.Frame):
         self.first_page = tk.StringVar() # first page of the split
         self.last_page = tk.StringVar() # last page of the split
 
+        # row 0
         label = ttk.Label(self, text="   Split PDF", font=("Times New Roman", 25))
-        label.grid(row=0, column=1, padx=70, pady=70, columnspan=2, sticky="n")
+        label.grid(row=0, column=1, padx=70, pady=70, columnspan=2, sticky="e")
 
+        # ------------------------------------- row 1 ---------------------------------------------
         file_upload_button = ttk.Button(self, text="Choose the file you wish to upload", width=40,
                              command=self.upload_file)
         file_upload_button.grid(row=1, column=1, padx=30, pady=30, sticky="n")
 
-        self.file_name_label = ttk.Label(self, width=50, text="", font=("Times New Roman", 10))
+        self.file_name_label = ttk.Label(self, width=35, text="", font=("Times New Roman", 13))
         self.file_name_label.grid(row=1, column=2, padx=30, pady=30)
 
-        fillerLabel1 = ttk.Label(self, text="     ", width=20, font=("Times New Roman", 15))
-        fillerLabel1.grid(row=1, column=3, padx=30, pady=30)
+        self.file_size = ttk.Label(self, text="", width=40, font=("Times New Roman", 13))
+        self.file_size.grid(row=1, column=3, padx=30, pady=30)
 
-        range_label = ttk.Label(self, text="Enter the first and last page of the split: ",
-                                font=("Times New Roman", 15))
-        range_label.grid(row=2, column=1, padx=30, pady=30)
+        # ------------------------------------- row 2 ---------------------------------------------
+        first_page_label = ttk.Label(self, text="Enter the first page: ",
+                                font=("Times New Roman", 13))
+        first_page_label.grid(row=2, column=1, padx=10, pady=10)
 
         first_page_value = tk.Entry(self, textvariable=self.first_page, font=("Times New Roman", 15))
-        first_page_value.grid(row=2, column=2, padx=30, pady=30)
+        first_page_value.grid(row=2, column=2, padx=10, pady=10)
+
+        last_page_label = ttk.Label(self, text="Enter the last page: ",
+                                font=("Times New Roman", 13))
+        last_page_label.grid(row=2, column=3, padx=10, pady=10)
 
         last_page_value = tk.Entry(self, textvariable=self.last_page, font=("Times New Roman", 15))
-        last_page_value.grid(row=2, column=3, padx=30, pady=30)
+        last_page_value.grid(row=2, column=4, padx=10, pady=10)
 
         button2 = ttk.Button(self, text="Split", width=40,
                              command=self.split)
-        button2.grid(row=3, column=2, padx=30, pady=30, sticky="n")
+        button2.grid(row=3, column=2, padx=30, pady=30, sticky="e")
 
     def split(self):
         # if first page > no. of pages, empty pdf
@@ -111,13 +118,14 @@ class Split(tk.Frame):
         for i in range(first_page - 1, last_page):
             writer.add_page(reader.pages[i])
         
-        writer.write(pdf_helper.add_extension(self.file_name))
+        writer.write("C:/Users/visha/Documents/" + pdf_helper.add_extension(self.file_name))
         writer.close()
         
 
     def upload_file(self):
         file_types = [('PDF Files', 'pdf')]
         self.file_name = f.askopenfilename(filetypes=file_types, initialdir="shell:Downloads")
+        self.file_size.configure(text=f"This document has {len(PdfReader(self.file_name).pages)} pages.")
         self.file_name = self.file_name.split('/')[-1]
         self.file_name_label.configure(text=self.file_name)
         self.file_name_label.update()
