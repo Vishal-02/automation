@@ -4,6 +4,10 @@ from tkinter import filedialog as f
 from PyPDF2 import PdfReader, PdfWriter
 import pdf_functions as pdf_helper
 
+"""
+!!!!SUB-FRAMES!!!!
+"""
+
 class base_app(tk.Tk):
     def __init__(self, *args, **kwargs) -> None:
         tk.Tk.__init__(self, *args, **kwargs)
