@@ -47,7 +47,7 @@ def split_pdf(args: ArgumentParser.parse_args):
     for i in range(start - 1, end):
         writer.add_page(reader.pages[i])
     
-    writer.write(add_extension(args.name))
+    writer.write("C:/Users/visha/Documents/" + add_extension(args.name))
     writer.close()
 
 def merge_pdf(args: ArgumentParser.parse_args):
@@ -56,7 +56,7 @@ def merge_pdf(args: ArgumentParser.parse_args):
     '''
 
     merger = PdfWriter()
-    first = check_valid_file(args.first)
+    first = check_valid_file(add_extension(args.first))
     other = []
 
     for pdfs in args.other:
@@ -67,7 +67,7 @@ def merge_pdf(args: ArgumentParser.parse_args):
     for pdf in other:
         merger.append(pdf)
 
-    merger.write(add_extension(args.name))
+    merger.write("C:/Users/visha/Documents/" + add_extension(args.name))
     merger.close()
 
 def encrypt(args: ArgumentParser.parse_args):
@@ -85,7 +85,7 @@ def encrypt(args: ArgumentParser.parse_args):
     # with open(add_extension(args.name), "wb") as f:
     #     writer.write(f)
 
-    writer.write(add_extension(args.name))
+    writer.write("C:/Users/visha/Documents/" + add_extension(args.name))
     writer.close()
 
 def decrypt(args: ArgumentParser.parse_args):
@@ -106,5 +106,5 @@ def decrypt(args: ArgumentParser.parse_args):
     # with open("decrypted-pdf.pdf", "wb") as f:
     #     writer.write(f)
 
-    writer.write(add_extension(args.name))
+    writer.write("C:/Users/visha/Documents/" + add_extension(args.name))
     writer.close()
