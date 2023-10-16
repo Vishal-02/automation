@@ -20,3 +20,8 @@ ideas for other tasks i'd like automated:
     - in case it wasn't clear, we're building an app
     - i have no idea how to make apps so this is going to be the most time consuming project yet
     - either link it to sheets or make it be able to export expenses as an excel fields
+
+- something with the gmail api
+    - it doesn't seem to have much, keep checking it out though
+    - maybe you can use it to send small emails through the command line?
+    
