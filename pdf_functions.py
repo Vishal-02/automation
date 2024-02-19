@@ -1,4 +1,4 @@
-from PyPDF2 import PdfReader, PdfWriter
+from pypdf import PdfReader, PdfWriter
 from os import path
 from argparse import ArgumentParser
 
@@ -50,6 +50,7 @@ def split_pdf(args: ArgumentParser.parse_args):
     writer.write("C:/Users/visha/Documents/" + add_extension(args.name))
     writer.close()
 
+# TODO: if the output path is taken as an input, the make sure it downloads in that location
 def merge_pdf(args: ArgumentParser.parse_args):
     '''
     function that merges pdf files and writes the output pdf at cwd.
@@ -57,12 +58,10 @@ def merge_pdf(args: ArgumentParser.parse_args):
 
     merger = PdfWriter()
     first = check_valid_file(add_extension(args.first))
-    other = []
+    other = [first]
 
     for pdfs in args.other:
-        other.append(check_valid_file(pdfs))
-
-    other.insert(0, first)
+        other.append(check_valid_file(add_extension(pdfs)))
 
     for pdf in other:
         merger.append(pdf)

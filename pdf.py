@@ -4,10 +4,6 @@ from pdf_functions import *
 '''
 TODO:
 - how to make it so that i can access this script from anywhere on my laptop
-
-- encrypt and decrypt functions?:
-    - encrypt
-    - decrypt
 '''
 
 parser = ArgumentParser(description="Parser for parsing commands to manipulate PDF files")
@@ -22,6 +18,7 @@ split_parser.add_argument("--name", type=str, default = "split")
 split_parser.set_defaults(func=split_pdf)
 
 # subparser for merge
+#TODO : add the fucking path parameter
 merge_parser = subparsers.add_parser("merge", help="merge parser")
 merge_parser.add_argument("--first", type=str, required=True)
 merge_parser.add_argument("--other", type=str, required=True, nargs="+")

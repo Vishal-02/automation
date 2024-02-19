@@ -25,3 +25,5 @@ ideas for other tasks i'd like automated:
     - it doesn't seem to have much, keep checking it out though
     - maybe you can use it to send small emails through the command line?
     
+- pdf splitter
+    - i need to make the gui for this 
