@@ -18,11 +18,11 @@ split_parser.add_argument("--name", type=str, default = "split")
 split_parser.set_defaults(func=split_pdf)
 
 # subparser for merge
-#TODO : add the fucking path parameter
 merge_parser = subparsers.add_parser("merge", help="merge parser")
 merge_parser.add_argument("--first", type=str, required=True)
 merge_parser.add_argument("--other", type=str, required=True, nargs="+")
 merge_parser.add_argument("--name", type=str, default="merged")
+merge_parser.add_argument("--path", type=str)
 merge_parser.set_defaults(func=merge_pdf)
 
 # subparser for encryption
