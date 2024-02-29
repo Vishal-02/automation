@@ -1,5 +1,10 @@
 import random
-from queue import Queue
+from math import log10
+from matplotlib import pyplot as plt
+from collections import deque
+from time import time
+
+random.seed(44)
 
 # checks whether or not the coordinates are out of bounds
 def is_valid(i, j, D):
@@ -12,23 +17,36 @@ def print_grid(grid):
             print(block, end=" ")
         print("")
 
+# gets neighbors
+def get_neighbors(row, col, D, buffer = 1):
+    if buffer > 1:
+        l = [(row, col)]
+        for i in range(buffer):
+            l.append([(row - i, col), (row + i, col), (row, col - i), (row, col + i)])
+    else:
+        l = [(row, col), (row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]
+
+    neighbor = [n for n in l if is_valid(n[0], n[1], D)]
+    return neighbor
+
 # finds the shortest path from the bot to the captain (using bfs)
-def find_shortest_path(grid, bot_start, captain, new_alien=[]):
-    q = Queue()
-    q.put(bot_start)
+def find_shortest_path(grid, bot_start, captain, new_aliens = []):
+    q = deque()
+    q.append(bot_start)
     prev = {bot_start: bot_start}
     reached_captain = False
     visited = {}
 
-    while not q.empty():
-        start_x, start_y = q.get()
-        visited[(start_x, start_y)] = 0
+    while q:
+        start_x, start_y = q[0]
+        q.popleft()
+        visited[(start_x, start_y)] = 1
 
         adjacent = [(start_x + 1, start_y), (start_x - 1, start_y), (start_x, start_y + 1), (start_x, start_y - 1)]
         for child_x, child_y in adjacent:
             if is_valid(child_x, child_y, len(grid[0])) and (child_x, child_y) not in visited:
-                if grid[child_x][child_y] not in ['X', 'A'].append(new_alien):
-                    q.put((child_x, child_y))
+                if grid[child_x][child_y] not in ['X', 'A'] + new_aliens:
+                    q.append((child_x, child_y))
                     prev[(child_x, child_y)] = (start_x, start_y)
                 
                     if (child_x, child_y) == captain:
@@ -48,11 +66,13 @@ def find_shortest_path(grid, bot_start, captain, new_alien=[]):
         path.append((row, col))
         grid[row][col] = 'Z'
         row, col = prev[(row, col)]
-
+    path.append(bot_start)
+    
     return True, path[::-1]
 
 # take a guess
-def move_alien(grid, alien_pos, i):
+def move_alien(grid, alien_pos, i, var = True):
+    # print(f"i: {i}, alien_pos: {alien_pos}")
     D = len(grid[0])
     adj = [0, -1, 0, 1, 0]
     y, x = alien_pos[i]
@@ -63,65 +83,86 @@ def move_alien(grid, alien_pos, i):
         if is_valid(new_y, new_x, D) and grid[new_y][new_x] not in ['X', 'A']:
             possible_moves.append((new_y, new_x))
 
-    new_y, new_x = random.choice(possible_moves)
+    new_y, new_x = random.choice(possible_moves) if len(possible_moves) > 0 else alien_pos[i]
     grid[y][x] = '.'
-    if grid[new_y][new_x] == 'B':
-        grid[new_y][new_x] = 'A'
-        return True
     alien_pos[i] = (new_y, new_x)
+
+    if grid[new_y][new_x] == 'B':
+        grid[new_y][new_x] == 'A'
+        return True
+
+    if var:
+        new_aliens = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y, D) if is_valid(row, col, D)]
+        for row, col in new_aliens:
+            if grid[row][col] == 'B':
+                grid[new_y][new_x] == 'A'
+                return True
+            
+    grid[new_y][new_x] == 'A'
+    # print(f"i: {i}, alien_pos: {alien_pos}", end="\n\n")
+
+    return False
 
 # moves bot 1
 def move_bot_1(grid, bot_start, alien_pos, captain):
     t = 0
+    bot_1_path_counter = 0
     ded = False
     exists, path = find_shortest_path(grid, bot_start, captain)
-    if not exists:
-        print("the path does not exist")
-        return t
     
     curr_row, curr_col = bot_start
-    row, col = path[0]
 
-    while t < 1000 and (row, col) != captain:
+    while t < 1000:
         t += 1
-        row, col = path[t]
-
-        if grid[row][col] == 'A':
-            print("bot ran into the alien, it ded")
-            ded = True
-            break
+        bot_1_path_counter += 1
+        row, col = path[bot_1_path_counter] if len(path) > 0 else bot_start
         
-        # move the bot
-        grid[curr_row][curr_col] = '.'
-        grid[row][col] = 'B'
-        curr_col, curr_row = col, row
+        if exists:
+            if grid[row][col] == 'A':
+                # print("bot ran into the alien, it ded")
+                ded = True
+                break
+            
+            # move the bot
+            grid[curr_row][curr_col] = '.'
+            grid[row][col] = 'B'
+            curr_col, curr_row = col, row
+        else:
+            bot_1_path_counter = 1
+            exists, path = find_shortest_path(grid, bot_start, captain)
+
+        if (curr_row, curr_col) == captain:
+            break
 
         # move the aliens
         random.shuffle(alien_pos)
         for i in range(len(alien_pos)):
             did_it_kill = move_alien(grid, alien_pos, i)
             if did_it_kill == True:
-                print("alien ran into bot and killed it, bot ded")
+                # print("alien ran into bot and killed it, bot ded")
                 ded = True
                 break
 
-    if not ded and (row, col) == captain:
-        print(f"captain saved!! in {t} steps!!")
-    return t
+    # if not ded and (curr_row, curr_col) == captain:
+    #     print(f"captain saved!! in {t} steps!!")
+    #     pass
+    
+    return [not ded, t]
 
 # time for bot 2
 def move_bot_2(grid, bot_start, alien_pos, captain):
-    exists, path = find_shortest_path(grid, bot_start)
+    exists, path = find_shortest_path(grid, bot_start, captain)
     t = 0
     ded = False
     curr_row, curr_col = bot_start
+    row, col = bot_start
 
     while t < 1000 and (row, col) != captain:
         if not exists:
             print("The path does not exist")
             return t
         t += 1
-        row, col = path[1]
+        row, col = path[1] if len(path) > 1 else path[0]
 
         # move the bot
         if grid[row][col] == 'A':
@@ -146,7 +187,70 @@ def move_bot_2(grid, bot_start, alien_pos, captain):
 
     if not ded and (row, col) == captain:
         print(f"captain saved!! in {t} steps!!")
-    return t
+    return [not ded, t]
+
+# let's create bot 3
+def move_bot_3(grid, bot_start, alien_pos, captain):
+    # we're going to be adding the buffer to the aliens by simply adding their adjacent cells to the alien_pos list
+    D = len(grid[0])
+
+    # a list containing positions of aliens and their neighboring cells (nsew)
+    neighbor_cells = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y, D)]
+
+    # now we need to get the shortest path with these new 'aliens'
+    exists, path = find_shortest_path(grid, bot_start, captain)
+    as_we_move = [bot_start] # tracks the path as we keep moving and recalculating across the grid
+    t = 0
+    ded = False
+    curr_row, curr_col = bot_start
+    row, col = bot_start
+
+    # since the alien_pos list is going to be changing and we don't know if we're going to be successful with this strat,
+    # let's put the original alien_pos in another list in case we want to run the bot 2 strat instead
+    org_alien_pos = [element for element in alien_pos]
+
+    # since the grid also changes,
+    org_grid = [element[:] for element in grid]
+
+    while t < 1000 and (row, col) != captain:
+        if not exists:
+            print("The path does not exist")
+            return t
+        t += 1
+        row, col = path[1] if len(path) > 1 else path[0]
+
+        # move the bot
+        if grid[row][col] == 'A' or (row, col) in neighbor_cells:
+            print("bot ran into the alien, it ded")
+            ded = True
+            break
+
+        grid[curr_row][curr_col] = '.'
+        grid[row][col] = 'B'
+        curr_col, curr_row = col, row
+        as_we_move.append((row, col))
+
+        # move the aliens
+        random.shuffle(alien_pos)
+        for i in range(len(alien_pos)):
+            did_it_kill = move_alien(grid, alien_pos, i)
+            if did_it_kill == True:
+                print("alien ran into bot and killed it, bot ded")
+                ded = True
+                break
+        
+        # since the aliens moved, there's new alien positions and hence new adjacent cells as well. so we recalculate
+        neighbor_cells = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y) if is_valid(row, col, len(grid[0]))]
+        exists, path = find_shortest_path(grid, (row, col), captain, neighbor_cells)
+
+    if (row, col) == captain:
+        print("we found the cap with the alien buffer")
+        return [not ded, t]
+
+    # if we're here, it either means that t > 1000 or we died
+    # so we just do what bot 2 did
+    second_t = move_bot_2(org_grid, bot_start, org_alien_pos, captain)
+    return second_t
 
 # creates the grid
 def grid_creator(grid, num_aliens, D):
@@ -244,41 +348,87 @@ def grid_creator(grid, num_aliens, D):
 
     return bot_start, alien_pos, (captain_row, captain_col)
 
-# let's do bot 3
-def move_bot_3(grid, bot_start, alien_pos, captain):
-    # we're going to be adding the buffer to the aliens by simply adding their adjacent cells to the alien_pos list
-    buff_aliens = [] # these are the cells adj to the aliens that we'll give to the shortest path algo
+# let's think of something for bot 4
+def move_bot_4(grid, bot_start, alien_pos, captain):
+    '''
+    you can increase alien buffer by a factor of grid size (D) : (a // 10) * (log10(a) / log10(1000))
+    check out evasion in case of no path
+    final possible addition, danger detection
+    '''
+    D = len(grid[0])
+    min_dist = D // 6
+    buffer = (D // 10) * (log10(D) / log10(1000))
+    neighbor_cells = [(x, y) for row, col in alien_pos for x, y in get_neighbors(row, col, D, buffer)]
 
-    def get_neighbors(row, col):
-        l = [(row, col), (row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)]
-        neighbor = [n for n in l if is_valid(n[0], n[1], len(grid[0]))]
-        return neighbor
-    
-    # a list containing positions of aliens and their neighboring cells (nsew)
-    neighbor_cells = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y) if is_valid(row, col, len(grid[0]))]
-
-    # now we need to get the shortest path with these new 'aliens'
+    # bot 4 still follows a bfs kinda path, so we use the same code over here as the other bots
     exists, path = find_shortest_path(grid, bot_start, captain)
     t = 0
     ded = False
+    lookout = len(alien_pos) // 3 # 3 is an arbitrary number we choose here
     curr_row, curr_col = bot_start
+    row, col = bot_start
+
+    alien_pos_copy = [element for element in alien_pos]
+    grid_copy = [element[:] for element in grid]
+
+    def evasion_strategy(some_closest_aliens):
+        mean_x, mean_y = 0, 0
+        for x, y in some_closest_aliens:
+            mean_x += x
+            mean_y += y
+        
+        mean_x /= len(some_closest_aliens)
+        mean_y /= len(some_closest_aliens)
+
+        # now go in the opposite direction while using the captains position to modify it,
+        # so that we don't move too far away from the dude
+
+        final_x, final_y = (-mean_x, -mean_y)
+        # now we offset it by the captains direction
+        final_direction = (final_x + captain[0] / 2, final_y + captain[1] / 2)
+
+        return final_direction
+
+    def move_bot():
+        if grid[row][col] == 'A' or (row, col) in neighbor_cells:
+            print("bot ran into the alien, it ded")
+            return True
+
+        grid[curr_row][curr_col] = '.'
+        grid[row][col] = 'B'
+        curr_col, curr_row = col, row
 
     while t < 1000 and (row, col) != captain:
         if not exists:
             print("The path does not exist")
             return t
         t += 1
-        row, col = path[1]
+        row, col = path[1] if len(path) > 1 else path[0]
 
-        # move the bot
-        if grid[row][col] == 'A':
-            print("bot ran into the alien, it ded")
-            ded = True
-            break
+        # now let's find the manhattan distance and we only look at it if its 'close enough'
+        bot_x, bot_y = bot_start
+        some_closest_aliens = [dist for dist in 
+                           [abs(bot_x - x) + abs(bot_y - y) for x, y in alien_pos] 
+                           if dist <= min_dist].sort()[:lookout]
+        
+        # so the bot moves one step towards its new direction until the aliens are far away from it
+        if some_closest_aliens == lookout:
+            # find the general "direction" of these bots and move away from them
+            # that's kind of just the average of their positions in the opposite direction
+            final_direction = evasion_strategy(some_closest_aliens)
 
-        grid[curr_row][curr_col] = '.'
-        grid[row][col] = 'B'
-        curr_col, curr_row = col, row
+            # we got the direction we're supposed to be heading in for now
+            exists, path = find_shortest_path(grid, (curr_row, curr_col), final_direction, neighbor_cells)
+            if not exists:
+                # the bot stays still and does nothing
+                pass
+            else:
+                move_bot()
+        else:
+            # move the bot
+            ded = move_bot()
+            if ded:
+                break
 
         # move the aliens
         random.shuffle(alien_pos)
@@ -290,28 +440,64 @@ def move_bot_3(grid, bot_start, alien_pos, captain):
                 break
         
         # since the aliens moved, there's new alien positions and hence new adjacent cells as well. so we recalculate
-        neighbor_cells = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y) if is_valid(row, col, len(grid[0]))]
-        path = find_shortest_path(grid, (row, col), captain, neighbor_cells)
+        neighbor_cells = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y, D, buffer)]
+        exists, path = find_shortest_path(grid, (row, col), captain, neighbor_cells)
+
+    if (row, col) == captain:
+        print("we found the cap with the extra alien buffer")
+        return [not ded, t]
 
 
-    
-
+# the main function
 def main():
     D = 30 # dimension of the grid
-    k = 4 # number of aliens
-    grid = [['X' for _ in range(D)] for _ in range(D)]
 
-    start_row, start_col = random.randint(0, D - 1), random.randint(0, D - 1)
-    print(f"origin x: {start_row}, origin y: {start_col}")
-    grid[start_col][start_row] = '.'
+    runs = 30
+    k_val = range(1,31)  
+    val = 0
+    
+    success_counts_bot1 = []
 
-    bot_start, alien_pos, captain = grid_creator(grid, k, D)
-    print_grid(grid)
-    print()
-    find_shortest_path(grid, bot_start, captain)
-    print_grid(grid)
+    start_time = time()
+    for k in k_val:
+        success_count = 0
+        for _ in range(runs):
+            val += 1
+            print(f"val : {val}")
+            grid = [['X' for _ in range(D)] for _ in range(D)]
+            start_row, start_col = random.randint(0, D - 1), random.randint(0, D - 1)
+            grid[start_col][start_row] = '.'
+            bot_start, alien_pos, captain = grid_creator(grid, k, D)
+            success = move_bot_1(grid, bot_start, alien_pos, captain)
+            if success[0]:
+                success_count += 1
+        success_counts_bot1.append(success_count)
+    end_time = time()
+
+    print(f"time taken : {end_time - start_time}, val : {val}")
+    
+    plt.figure(figsize=(8, 6))
+    plt.plot(k_val, [count / runs for count in success_counts_bot1], marker='o')
+    plt.xlabel('Number of Aliens')
+    plt.ylabel('Success Rate')
+    plt.title(f"Bot 1 : {runs} runs")
+    plt.grid(True)
+    plt.show()
+    # print_grid(grid)
+    # grid = [row[:] for row in grid_copy]
+    # print("X-" * 20, end="\n")
+
+    # move_bot_2(grid, bot_start, alien_pos, captain)
+    # print_grid(grid)
+    # grid = [row[:] for row in grid_copy]
+    # print("X-" * 20, end="\n")
+
+    # move_bot_3(grid, bot_start, alien_pos, captain)
+    # print_grid(grid)
+
+    
     # t = move_bot_1(grid, bot_start, captain)
     # print(t)
 
-if __name__ is '__main__':
+if __name__ == '__main__':
     main()
