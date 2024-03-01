@@ -1,4 +1,7 @@
-one = 1
-two = 2
-three = -one
-print(three, -two)
+test = [1, 2, 3, 4, 5]
+
+another = [element for element in test]
+
+test[1] = 100
+
+print(another, test)
