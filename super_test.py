@@ -62,6 +62,7 @@ def find_shortest_path(grid, bot_start, captain, new_aliens = []):
     row, col = prev[captain]
     while (row, col) != bot_start:
         path.append((row, col))
+
         grid[row][col] = 'Z'
         row, col = prev[(row, col)]
     path.append(bot_start)

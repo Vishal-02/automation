@@ -1,7 +1,3 @@
-test = [1, 2, 3, 4, 5]
-
-another = [element for element in test]
-
-test[1] = 100
-
-print(another, test)
+dead_end = [1, 2, 3, 4, 5, 6, 7]
+dead_end = dead_end[len(dead_end) // 2 :]
+print(dead_end)
