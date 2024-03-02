@@ -1,7 +1,4 @@
-dead_end = [1, 2, 3, 4, 5, 6, 7]
-test = dead_end[:]
-dead_end[-1] = 1000
-test[0] = -200
+test = [True, True, True]
 
-print(test)
-print(dead_end)
+if all(test):
+    print('something')

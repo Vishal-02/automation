@@ -58,7 +58,13 @@ class Grid:
     def reset_grid(self):
         for i in range(self.D):
             for j in range(self.D):
-                if self.grid[i][j].open == False or self.grid[i][j].captain:
+                # if it's a captain, it doesn't need changing so we continue
+                if self.grid[i][j].captain:
+                    continue
+
+                # i need to check if it's a wall
+                # alien, bot, wall and captain have the 'open' property set to False
+                if all([not self.grid[i][j].open, not self.grid[i][j].alien, not self.grid[i][j].bot]):
                     continue
 
                 self.grid[i][j].path = False
@@ -246,7 +252,7 @@ class Bot:
         while (row, col) != self.bot_start:
             self.path.append((row, col))
             self.grid[row][col].path = True
-            self.grid[row][col].path = True
+            self.grid[row][col].open = True
             row, col = prev[(row, col)]
 
         self.path.append(self.bot_start)
@@ -290,7 +296,6 @@ class Bot:
 
             # move the aliens
             random.shuffle(self.alien_pos)
-            print(f"aliens former position : {self.alien_pos}")
             for i, shuffled in enumerate(self.alien_pos):
                 # we gotta move the aliens now, so we get the open neighbors
                 alien_row, alien_col = shuffled
@@ -305,7 +310,7 @@ class Bot:
                 # check if it kills the bot or something
                 if self.grid[x][y].bot:
                     return self.reached_captain, t
-                
+
                 # it didn't run into a bot
                 self.grid[x][y].alien = True
                 self.grid[x][y].open = False
@@ -315,14 +320,23 @@ class Bot:
 
                 self.alien_pos[i] = (x, y)
             
-            self.print_grid()
         # the bot simply survived and didn't find the captain
         return self.reached_captain, t
+
+    # moves bot 2
+    def move_bot_2(self):
+        pass
+
 
 grid = Grid(10)
 grid.gen_grid(5)
 bot1 = Bot(grid)
+
 bot1.shortest_path_function()
 bot1.print_grid()
+
 print("now we start moving...", end="\n\n")
 bot1.move_bot_1()
+print("resetting the grid...", end="\n\n")
+grid.reset_grid()
+grid.print_grid()
