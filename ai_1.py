@@ -399,7 +399,57 @@ class Bot:
 
     # move bot 3
     def move_bot_3(self):
-        
+        t = 0
+        curr_row, curr_col = self.bot_start
+        row, col = self.bot_start
+
+        # since the alien_pos list is going to be changing and we don't know if we're going to be successful with this strat,
+        # let's put the original alien_pos in another list in case we want to run the bot 2 strat instead
+        org_alien_pos = self.alien_pos[:]
+
+        # since the grid also changes,
+        org_grid = [element[:] for element in grid]
+
+        while t < 1000 and (row, col) != self.captain:
+            # a list containing positions of aliens and their neighboring cells (nsew)
+            neighbor_cells = self.alien_pos[:]
+            neighbor_cells.append((row, col) for x, y in self.alien_pos for row, col in self.get_neighbors(x, y))
+
+            # set the neighboring cells as aliens as well, cause you might as well
+
+
+            self.find_shortest_path()
+            t += 1
+            exists = len(path) > 1
+            row, col = path[1] if exists else (curr_row, curr_col)
+
+            # move the bot
+            if exists:
+                if self.grid[row][col].alien:
+                    return self.reached_captain, t
+                elif self.grid[row][col].captain:
+                    self.reached_captain = True
+                    return self.reached_captain, t
+                self.move_bot(row, col, curr_row, curr_col)
+
+                curr_col, curr_row = col, row
+
+            # move the aliens
+            if self.move_aliens():
+                return self.reached_captain, t
+
+            # since the aliens moved, there's new alien positions and hence new adjacent cells as well. so we recalculate
+            neighbor_cells = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y, D)]
+            exists, path = find_shortest_path(grid, (row, col), captain, neighbor_cells)
+
+        if (row, col) == captain:
+            print("we found the cap with the alien buffer")
+            return [not ded, t]
+
+        # if we're here, it either means that t > 1000 or we died
+        # so we just do what bot 2 did
+        second_t = move_bot_2(org_grid, bot_start, org_alien_pos, captain)
+        return second_t
         pass
 
 grid = Grid(10)
