@@ -2,8 +2,7 @@ import random
 from matplotlib import pyplot as plt
 from collections import deque
 from time import time
-from termcolor import colored, cprint
-# import copy
+from termcolor import colored
 
 class Grid_Status:
     def __init__(self) -> None:
@@ -53,29 +52,6 @@ class Grid:
 
         neighbor = [(x, y) for x, y in l if self.is_valid(x, y)]
         return neighbor
-    
-    # resets the grid as it was original
-    def reset_grid(self):
-        for i in range(self.D):
-            for j in range(self.D):
-                # if it's a captain, it doesn't need changing so we continue
-                if self.grid[i][j].captain:
-                    continue
-
-                # i need to check if it's a wall
-                # alien, bot, wall and captain have the 'open' property set to False
-                if all([not self.grid[i][j].open, not self.grid[i][j].alien, not self.grid[i][j].bot]):
-                    continue
-
-                self.grid[i][j].path = False
-                self.grid[i][j].walked = False
-                self.grid[i][j].alien = False
-                self.grid[i][j].bot = False
-                self.grid[i][j].open = True
-
-        self.grid[self.bot_start[0]][self.bot_start[1]].bot = True
-        for alien_row, alien_col in self.alien_pos:
-            self.grid[alien_row][alien_col].alien = True
 
     # just prints the grid out
     def print_grid(self):
@@ -196,6 +172,29 @@ class Bot:
                 print(block, end="")
             print()
 
+    # resets the grid as it was original
+    def reset_grid(self):
+        for i in range(self.D):
+            for j in range(self.D):
+                # if it's a captain, it doesn't need changing so we continue
+                if self.grid[i][j].captain:
+                    continue
+
+                # i need to check if it's a wall
+                # alien, bot, wall and captain have the 'open' property set to False
+                if all([not self.grid[i][j].open, not self.grid[i][j].alien, not self.grid[i][j].bot]):
+                    continue
+
+                self.grid[i][j].path = False
+                self.grid[i][j].walked = False
+                self.grid[i][j].alien = False
+                self.grid[i][j].bot = False
+                self.grid[i][j].open = True
+
+        self.grid[self.bot_start[0]][self.bot_start[1]].bot = True
+        for alien_row, alien_col in self.alien_pos:
+            self.grid[alien_row][alien_col].alien = True
+
     # checks if the index is valid
     def is_valid(self, row, col):
         return (0 <= row < self.D) and (0 <= col < self.D)
@@ -210,9 +209,12 @@ class Bot:
         return neighbor
 
     # gets the shortest path using bfs
-    def shortest_path_function(self, bot_start = None):
+    def shortest_path_function(self, bot_start = None, captain = None):
         if bot_start == None:
             bot_start = self.bot_start
+        if captain == None:
+            captain = self.captain
+
         self.path = []
         q = deque()
         q.append(bot_start)
@@ -228,7 +230,7 @@ class Bot:
             # adjacent = [(start_x + 1, start_y), (start_x - 1, start_y), (start_x, start_y + 1), (start_x, start_y - 1)]
             adjacent = self.get_neighbors(start_x, start_y)
             for child_x, child_y in adjacent:
-                if (child_x, child_y) == self.captain:
+                if (child_x, child_y) == captain:
                     reached = True
                     prev[(child_x, child_y)] = (start_x, start_y)
                     break
@@ -245,11 +247,11 @@ class Bot:
         # what if there's no path?
         if reached == False:
             print("no path...")
-            print(f"captain : {self.captain}")
+            print(f"captain : {captain}")
             return
         
-        self.path.append(self.captain)
-        row, col = prev[self.captain]
+        self.path.append(captain)
+        row, col = prev[captain]
         while (row, col) != bot_start:
             self.path.append((row, col))
             self.grid[row][col].path = True
@@ -270,9 +272,12 @@ class Bot:
         self.grid[curr_row][curr_col].walked = True # just for the visuals
     
     # moves the aliens
-    def move_aliens(self, put_buffer = False):
-        random.shuffle(self.alien_pos)
-        for i, shuffled in enumerate(self.alien_pos):
+    def move_aliens(self, put_buffer = False, alien_pos = None):
+        if alien_pos == None:
+            alien_pos = self.alien_pos
+
+        random.shuffle(alien_pos)
+        for i, shuffled in enumerate(alien_pos):
             # we gotta move the aliens now, so we get the open neighbors
             alien_row, alien_col = shuffled
             possible = self.get_neighbors(alien_row, alien_col)
@@ -294,12 +299,15 @@ class Bot:
             self.grid[alien_row][alien_col].alien = False
             self.grid[alien_row][alien_col].open = True
 
-            self.alien_pos[i] = (x, y)
+            alien_pos[i] = (x, y)
 
         if put_buffer == True:
-            
-            
+            neighbor_cells = []
+            neighbor_cells.append((row, col) for x, y in self.alien_pos for row, col in self.get_neighbors(x, y))
 
+            for neighbor_row, neighbor_col in neighbor_cells:
+                self.grid[neighbor_row][neighbor_col].alien = True
+            
     # clears the path drawn by the shortest path function
     def clear_path(self):
         for i in range(self.D):
@@ -409,16 +417,13 @@ class Bot:
         
         # since the alien_pos list is going to be changing and we don't know if we're going to be successful with this strat,
         # let's put the original alien_pos in another list in case we want to run the bot 2 strat instead
-        org_alien_pos = self.alien_pos[:]
-
-        # since the grid also changes,
-        org_grid = [element[:] for element in grid]
+        alien_pos = self.alien_pos[:]
 
         while t < 1000 and (row, col) != self.captain:
             # a list containing positions of aliens and their neighboring cells (nsew)
             # neighbor_cells = self.alien_pos[:]
             neighbor_cells = []
-            neighbor_cells.append((row, col) for x, y in self.alien_pos for row, col in self.get_neighbors(x, y))
+            neighbor_cells.append((row, col) for x, y in alien_pos for row, col in self.get_neighbors(x, y))
 
             # set the neighboring cells as aliens as well, cause you might as well
             # makes the shortest path function handling a bit better
@@ -427,7 +432,7 @@ class Bot:
 
             self.find_shortest_path()
             t += 1
-            exists = len(self.path) > 1
+            exists = len(self.path) > 0
             row, col = self.path[1] if exists else (curr_row, curr_col)
 
             # move the bot
@@ -445,30 +450,104 @@ class Bot:
             for neighbor_row, neighbor_col in neighbor_cells:
                 self.grid[neighbor_row][neighbor_col].alien = False
 
-            if self.move_aliens(True):
+            if self.move_aliens(True, alien_pos):
                 return self.reached_captain, t
-
-            # since the aliens moved, there's new alien positions and hence new adjacent cells as well. so we recalculate
-            neighbor_cells = [(row, col) for x, y in alien_pos for row, col in get_neighbors(x, y, D)]
-            exists, path = find_shortest_path(grid, (row, col), captain, neighbor_cells)
-
-        if (row, col) == captain:
-            print("we found the cap with the alien buffer")
-            return [not ded, t]
 
         # if we're here, it either means that t > 1000 or we died
         # so we just do what bot 2 did
-        second_t = move_bot_2(org_grid, bot_start, org_alien_pos, captain)
-        return second_t
-        pass
+        self.reset_grid()
+        
+        return self.move_bot_2()
+
+    # moves bot 4
+    def move_bot_4(self):
+        min_dist = 3 # D // 6
+        buffer = 1 # int((D // 10) * (log10(D) / log10(1000)))
+
+        # neighbor_cells = [(x, y) for row, col in self.alien_pos for x, y in self.get_neighbors(row, col, buffer)]
+        # bot 4 still follows a bfs kinda path, so we use the same code over here as the other bots
+        t = 0
+        lookout = len(self.alien_pos) // 3 # 3 is an arbitrary number we choose here
+        curr_row, curr_col = self.bot_start
+        row, col = self.bot_start
+
+        alien_pos = self.alien_pos[:]
+
+        def evasion_strategy(some_closest_aliens):
+            mean_x, mean_y = 0, 0
+            for _, x, y in some_closest_aliens:
+                mean_x += x
+                mean_y += y
+            
+            mean_x /= len(some_closest_aliens)
+            mean_y /= len(some_closest_aliens)
+
+            # now go in the opposite direction while using the captains position to modify it,
+            # so that we don't move too far away from the dude
+            # also offset it by the captains direction
+            final_x, final_y = ((-mean_x + self.captain[0]) // 2, (-mean_y + self.captain[1]) // 2)
+            if not self.is_valid(final_x, final_y):
+                final_x = 0 if final_x < 0 else (self.D if final_x > self.D else final_x)
+                final_y = 0 if final_y < 0 else (self.D if final_y > self.D else final_y)
+            return (final_x, final_y)
+
+        while t < 1000 and (row, col) != self.captain:
+            t += 1
+            destination = self.captain
+            some_closest_aliens = []
+
+            # now let's find the manhattan distance and we only look at it if its 'close enough'
+            bot_x, bot_y = self.bot_start
+            temp = [(abs(bot_x - x) + abs(bot_y - y), x, y) for x, y in alien_pos]
+            if len(temp) > 0:
+                temp.sort()
+                some_closest_aliens = [(dist, x, y) for dist, x, y in temp if dist <= min_dist][:lookout]
+            
+            # so the bot moves one step towards its new direction until the aliens are far away from it
+            if len(some_closest_aliens) == lookout:
+                # find the general "direction" of these bots and move away from them
+                # that's kind of just the average of their positions in the opposite direction
+                destination = evasion_strategy(some_closest_aliens)
+
+            # get neighbor cells for the aliens
+            # i added this bit after getting the man.dist because the alien buffer might give us too many values
+            # and i didn't want that, i just need the alien to avoid the buffer which the shortest path can do
+            neighbor_cells = []
+            neighbor_cells.append((row, col) for x, y in alien_pos for row, col in self.get_neighbors(x, y))
+
+            for neighbor_row, neighbor_col in neighbor_cells:
+                self.grid[neighbor_row][neighbor_col].alien = True
+            
+            self.shortest_path_function((curr_row, curr_col), destination)
+            exists = len(self.path) > 0
+
+            if exists:
+                if self.grid[row][col].alien:
+                    return self.reached_captain, t
+                elif self.grid[row][col].captain:
+                    self.reached_captain = True
+                    return self.reached_captain, t
+                self.move_bot(row, col, curr_row, curr_col)
+                
+                curr_col, curr_row = col, row
+
+            # remove the alien buffers to move them
+            for neighbor_row, neighbor_col in neighbor_cells:
+                self.grid[neighbor_row][neighbor_col].alien = False
+            # the killing of the bot is taken care of by the function
+            if self.move_aliens(True, alien_pos):
+                return self.reached_captain, t
+        
+        return self.reached_captain, t
 
 grid = Grid(10)
 grid.gen_grid(5)
 bot1 = Bot(grid)
 
-bot1.move_bot_2()
-print("", end="\n\n")
-bot1.clear_path()
+bot1.shortest_path_function()
+bot1.print_grid()
+print("\n\n")
+bot1.reset_grid()
 bot1.print_grid()
 
 # print("now we start moving...", end="\n\n")
