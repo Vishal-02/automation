@@ -270,7 +270,7 @@ class Bot:
         self.grid[curr_row][curr_col].walked = True # just for the visuals
     
     # moves the aliens
-    def move_aliens(self):
+    def move_aliens(self, put_buffer = False):
         random.shuffle(self.alien_pos)
         for i, shuffled in enumerate(self.alien_pos):
             # we gotta move the aliens now, so we get the open neighbors
@@ -295,6 +295,10 @@ class Bot:
             self.grid[alien_row][alien_col].open = True
 
             self.alien_pos[i] = (x, y)
+
+        if put_buffer == True:
+            
+            
 
     # clears the path drawn by the shortest path function
     def clear_path(self):
@@ -402,7 +406,7 @@ class Bot:
         t = 0
         curr_row, curr_col = self.bot_start
         row, col = self.bot_start
-
+        
         # since the alien_pos list is going to be changing and we don't know if we're going to be successful with this strat,
         # let's put the original alien_pos in another list in case we want to run the bot 2 strat instead
         org_alien_pos = self.alien_pos[:]
@@ -412,16 +416,19 @@ class Bot:
 
         while t < 1000 and (row, col) != self.captain:
             # a list containing positions of aliens and their neighboring cells (nsew)
-            neighbor_cells = self.alien_pos[:]
+            # neighbor_cells = self.alien_pos[:]
+            neighbor_cells = []
             neighbor_cells.append((row, col) for x, y in self.alien_pos for row, col in self.get_neighbors(x, y))
 
             # set the neighboring cells as aliens as well, cause you might as well
-
+            # makes the shortest path function handling a bit better
+            for neighbor_row, neighbor_col in neighbor_cells:
+                self.grid[neighbor_row][neighbor_col].alien = True
 
             self.find_shortest_path()
             t += 1
-            exists = len(path) > 1
-            row, col = path[1] if exists else (curr_row, curr_col)
+            exists = len(self.path) > 1
+            row, col = self.path[1] if exists else (curr_row, curr_col)
 
             # move the bot
             if exists:
@@ -434,8 +441,11 @@ class Bot:
 
                 curr_col, curr_row = col, row
 
-            # move the aliens
-            if self.move_aliens():
+            # undo the neighbors, move the aliens, do the neighbors, check for death
+            for neighbor_row, neighbor_col in neighbor_cells:
+                self.grid[neighbor_row][neighbor_col].alien = False
+
+            if self.move_aliens(True):
                 return self.reached_captain, t
 
             # since the aliens moved, there's new alien positions and hence new adjacent cells as well. so we recalculate
