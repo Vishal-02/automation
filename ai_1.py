@@ -210,13 +210,15 @@ class Bot:
         return neighbor
 
     # gets the shortest path using bfs
-    def shortest_path_function(self):
+    def shortest_path_function(self, bot_start = None):
+        if bot_start == None:
+            bot_start = self.bot_start
+        self.path = []
         q = deque()
-        q.append(self.bot_start)
-        prev = {self.bot_start: self.bot_start}
+        q.append(bot_start)
+        prev = {bot_start: bot_start}
         visited = {}
         reached = False
-        # print(f"Bot is at : {self.bot_start}")
         
         while q:
             start_x, start_y = q[0]
@@ -234,7 +236,6 @@ class Bot:
                 if (child_x, child_y) not in visited:
                     if self.grid[child_x][child_y].alien == False and self.grid[child_x][child_y].open:
                         q.append((child_x, child_y))
-                        # print((child_x, child_y), end=" ")
                         prev[(child_x, child_y)] = (start_x, start_y)
                         visited[(child_x, child_y)] = 1
 
@@ -249,7 +250,7 @@ class Bot:
         
         self.path.append(self.captain)
         row, col = prev[self.captain]
-        while (row, col) != self.bot_start:
+        while (row, col) != bot_start:
             self.path.append((row, col))
             self.grid[row][col].path = True
             self.grid[row][col].open = True
@@ -258,17 +259,62 @@ class Bot:
         self.path.append(self.bot_start)
         self.path = self.path[::-1]
         
+    # moves the bot
+    def move_bot(self, row, col, curr_row, curr_col):       
+        self.grid[row][col].bot = True
+        self.grid[row][col].open = False
+
+        # the index that the bot moved from
+        self.grid[curr_row][curr_col].bot = False
+        self.grid[curr_row][curr_col].open = True
+        self.grid[curr_row][curr_col].walked = True # just for the visuals
+    
+    # moves the aliens
+    def move_aliens(self):
+        random.shuffle(self.alien_pos)
+        for i, shuffled in enumerate(self.alien_pos):
+            # we gotta move the aliens now, so we get the open neighbors
+            alien_row, alien_col = shuffled
+            possible = self.get_neighbors(alien_row, alien_col)
+            possible = [(x, y) for x, y in possible \
+                        if self.grid[x][y].open or self.grid[x][y].bot or self.grid[x][y].captain]
+
+            if len(possible) == 0:
+                continue
+
+            x, y = random.choice(possible)
+            # check if it kills the bot or something
+            if self.grid[x][y].bot:
+                return True
+
+            # it didn't run into a bot
+            self.grid[x][y].alien = True
+            self.grid[x][y].open = False
+
+            self.grid[alien_row][alien_col].alien = False
+            self.grid[alien_row][alien_col].open = True
+
+            self.alien_pos[i] = (x, y)
+
+    # clears the path drawn by the shortest path function
+    def clear_path(self):
+        for i in range(self.D):
+            for j in range(self.D):
+                self.grid[i][j].path = False
+
     # moves bot 1
     def move_bot_1(self):
         t = 0
         bot_1_path_counter = 1
         ded = False
+        self.shortest_path_function()
         
         curr_row, curr_col = self.bot_start
 
         while t < 1000:
             t += 1
-            exists = True if len(self.path) > 0 else False
+            # exists = True if len(self.path) > 0 else False
+            exists = len(self.path) > 0
             row, col = self.path[bot_1_path_counter] if exists else self.bot_start
             
             if exists:
@@ -280,13 +326,7 @@ class Bot:
                     return self.reached_captain, t
 
                 # the index that the bot moves to
-                self.grid[row][col].bot = True
-                self.grid[row][col].open = False
-
-                # the index that the bot moved from
-                self.grid[curr_row][curr_col].bot = False
-                self.grid[curr_row][curr_col].open = True
-                self.grid[curr_row][curr_col].walked = True # just for the visuals
+                self.move_bot(row, col, curr_row, curr_col)
 
                 bot_1_path_counter += 1
                 curr_col, curr_row = col, row
@@ -325,18 +365,54 @@ class Bot:
 
     # moves bot 2
     def move_bot_2(self):
-        pass
+        self.reached_captain = False
+        t = 0
+        curr_row, curr_col = self.bot_start
+        row, col = self.bot_start
 
+        while t < 1000 and (row, col) != self.captain:
+            t += 1
+            self.clear_path()
+            self.shortest_path_function((curr_row, curr_col))
+            row, col = self.path[1] if len(self.path) > 1 else (curr_row, curr_col)
+            exists = len(self.path) > 0
+
+            # move the bot
+            if exists:
+                if self.grid[row][col].alien:
+                    return self.reached_captain, t
+                elif self.grid[row][col].captain:
+                    self.reached_captain = True
+                    return self.reached_captain, t
+                self.move_bot(row, col, curr_row, curr_col)
+                
+                curr_col, curr_row = col, row
+            
+            # move the aliens
+            if self.move_aliens():
+                return self.reached_captain, t
+            
+            self.print_grid()
+            print("\n\n")
+
+        return self.reached_captain, t
+
+    # move bot 3
+    def move_bot_3(self):
+        
+        pass
 
 grid = Grid(10)
 grid.gen_grid(5)
 bot1 = Bot(grid)
 
-bot1.shortest_path_function()
+bot1.move_bot_2()
+print("", end="\n\n")
+bot1.clear_path()
 bot1.print_grid()
 
-print("now we start moving...", end="\n\n")
-bot1.move_bot_1()
-print("resetting the grid...", end="\n\n")
-grid.reset_grid()
-grid.print_grid()
+# print("now we start moving...", end="\n\n")
+# bot1.move_bot_2()
+# print("resetting the grid...", end="\n\n")
+# grid.reset_grid()
+# bot1.print_grid()
